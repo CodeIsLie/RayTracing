@@ -1,10 +1,9 @@
 
 class Ray:
-    def __init__(self, start, direction):
-
+    def __init__(self, start, direction, power=1.0):
         self.start_point = start
         self.direction = direction
-        self.power = 1
+        self.power = power
         self.color = None
         self.children = []
 
