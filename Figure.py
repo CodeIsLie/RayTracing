@@ -3,22 +3,67 @@ import numpy as np
 EPS = 1e-10
 
 
+def cross_product(a, b):
+    x = a[1] * b[2] - a[2] * b[1]
+    y = a[2] * b[0] - a[0] * b[2]
+    z = a[0] * b[1] - a[1] * b[0]
+    return np.array([x, y, z])
+
+
 class PlaneEq:
-    def __init__(self, p1, p2, p3):
-        self.A = 0
-        self.B = 0
-        self.C = 0
-        self.D = 0
+    def __init__(self, p1, p2, p3, center):
+        v1 = p2 - p1
+        v2 = p2 - p3
+
+        vec_cent = center - p2
+        ort_vec = cross_product(v1, v2)
+
+        dir_vec = np.dot(vec_cent, ort_vec)
+        sign_dir = 1 if dir_vec < 0 else -1
+        normal = ort_vec * sign_dir
+
+        self.A, self.B, self.C = normal
+        self.D = -np.dot(normal, p1)
+
+    def __str__(self):
+        return "A {} B {} C {} D {}".format(self.A, self.B, self.C, self.D)
+
+
+class LineEq:
+    def __init__(self, p1, p2):
+        self.A = p2[1] - p1[1]
+        self.B = p1[0] - p2[0]
+        self.C = -(self.A * p1[0] + self.B * p1[1])
+
+    def side(self, point):
+        return point[0] * self.A + point[1] * self.B + self.C > 0
+
+    def __str__(self):
+        return "A {} B {} C {} ".format(self.A, self.B, self.C)
 
 
 class Polygon:
-    def __init__(self, points=None):
+    def __init__(self, points=None, figure_center=np.array([0,0,0])):
         self.points = [] if points is None else points
-        self.eq = PlaneEq(points[0], points[1], points[2])
+        # mid of all points in XoY projection
+        p_sum = np.sum(points, axis=0)
+        self.mid_point = p_sum/len(points)
+        self.mid_point = self.mid_point[:2]
+        self.eq = PlaneEq(points[0], points[1], points[2], figure_center)
+        shifted_points = self.points[-1] + self.points[:-1]
+        self.line_eqs = [LineEq(p1, p2) for p1, p2 in zip(self.points, shifted_points)]
 
     def transform(self, matrix):
-        tensors = [np.array([x, y, z, 1]) for x,y,z in self.points]
+        tensors = [np.array([x, y, z, 1]) for x, y, z in self.points]
         self.points = [np.dot(tensor, matrix)[:3] for tensor in tensors]
+
+    def point_inside(self, point):
+        some_eq = self.line_eqs[0]
+        side = some_eq.side(self.mid_point)
+        for eq in self.line_eqs:
+            if eq.side(point) != side:
+                return False
+        return True
 
     def polygon_intersection(self, ray):
         A = self.eq.A
@@ -33,17 +78,22 @@ class Polygon:
 
         t = - (A * p0[0] + B * p0[1] + C * p0[2] + D) / denominator
         p = p0 + t * v
+        normal = np.array([A, B, C])
         # check if point in polygon or not
-        return p
+        return p, np.linalg.norm(t*v), normal if self.point_inside(p) else None
+
+    def __str__(self):
+        return ",".join([str(p) for p in self.points])
 
 
 class Figure:
-    def __init__(self, polygons, center=np.array([0, 0, 0])):
+    def __init__(self, polygons, color, center=np.array([0, 0, 0])):
         self.polygons = polygons
+        self.color = color
         self.center = center
 
     def transform(self, matrix):
-        x, y, z = self.center
+        x, y, z = self.center[:3]
         self.center = np.dot(np.array([x, y, z, 1]), matrix)
         for plane in self.polygons:
             plane.transform(matrix)
@@ -58,18 +108,40 @@ class Figure:
             ])
         )
 
+    def scale(self, mx, my, mz):
+        self.transform(
+            np.array([
+                [mx, 0,  0,  0],
+                [0,  my, 0,  0],
+                [0,  0,  mz, 0],
+                [0,  0,  0,  0]
+            ])
+        )
+
     def get_intersection(self, ray):
         # return closest point, distance to it and normal vector
         # find intersection with each polygon, if it exists
-        # get the closest point from list
-        # function of normal finding is needed
-        return np.array([0, 0, 0])
+        min_distance = 1e+20
+        closest_intersection = None
+        for polygon in self.polygons:
+            intersection = polygon.polygon_intersection(ray)
+            if intersection is None:
+                continue
+            _, dist, _ = intersection
+            if dist < min_distance:
+                closest_intersection = intersection
+
+        return closest_intersection
+
+    def __str__(self):
+        return "\n".join([str(p) for p in self.polygons]) + "\ncenter " + str(self.center)
 
 
 class Sphere:
-    def __init__(self, center, radius):
+    def __init__(self, center, radius, color):
         self.center = center
         self.radius = radius
+        self.color = color
 
     def get_intersection(self, ray):
         # return closest point, distance to it and normal vector
