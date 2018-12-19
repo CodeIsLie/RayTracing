@@ -1,7 +1,6 @@
 from Figure import *
 from Light import *
-from space_model import SpaceModel
-
+from ray import Ray
 import numpy as np
 
 
@@ -15,7 +14,12 @@ def get_room():
     # do scaling
     room.scale(k_size, k_size, k_size)
     room.move(k_size/2, k_size/2, k_size/2)
-    del room.polygons[-2]
+    del room.polygons[-1]
+    room.polygons[0].color = (0, 255, 0)
+    room.polygons[1].color = (0, 255, 255)
+    room.polygons[2].color = (255, 0, 0)
+    room.polygons[3].color = (0, 0, 255)
+    room.polygons[4].color = (255, 0, 255)
 
     return room
 
@@ -39,14 +43,19 @@ def get_cube():
         [p8, p6, p2, p5]
     ])
     polygons = [Polygon(points) for points in edge_points]
-    p = 2
+    # p = 2
     return Figure(polygons, [0, 0, 0])
 
 # ASSUMING that field of view is 90 degrees on X and Y
 def get_camera():
-    return np.array([5, 15, 5])
+    return np.array([15, 5, 5])
 
-cube = get_cube()
-room = get_room()
-print(room)
-pass
+# cube = get_cube()
+# room = get_room()
+# print(room)
+
+scene_figures = [get_room()]
+scene_lights = []
+scene_camera = get_camera()
+
+print(get_room().get_intersection(Ray(np.array([10, 5, 5]), np.array([-1, 0, 0]))) )

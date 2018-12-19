@@ -43,19 +43,25 @@ class LineEq:
 
 
 class Polygon:
-    def __init__(self, points=None, figure_center=np.array([0,0,0])):
+    def __init__(self, points=None, figure_center=np.array([0,0,0]), color=(255,0,0)):
         self.points = [] if points is None else points
+        self.figure_center = figure_center
+        self.color = color
+        self.additional_info_calc()
+
+    def additional_info_calc(self):
         # mid of all points in XoY projection
-        p_sum = np.sum(points, axis=0)
-        self.mid_point = p_sum/len(points)
+        p_sum = np.sum(self.points, axis=0)
+        self.mid_point = p_sum/len(self.points)
         self.mid_point = self.mid_point[:2]
-        self.eq = PlaneEq(points[0], points[1], points[2], figure_center)
-        shifted_points = self.points[-1] + self.points[:-1]
+        self.eq = PlaneEq(self.points[0], self.points[1], self.points[2], self.figure_center)
+        shifted_points = [self.points[i-1] for i in range(len(self.points))]
         self.line_eqs = [LineEq(p1, p2) for p1, p2 in zip(self.points, shifted_points)]
 
     def transform(self, matrix):
         tensors = [np.array([x, y, z, 1]) for x, y, z in self.points]
         self.points = [np.dot(tensor, matrix)[:3] for tensor in tensors]
+        self.additional_info_calc()
 
     def point_inside(self, point):
         some_eq = self.line_eqs[0]
@@ -65,6 +71,7 @@ class Polygon:
                 return False
         return True
 
+    # TODO: Fix incorrect finding of intersection
     def polygon_intersection(self, ray):
         A = self.eq.A
         B = self.eq.B
@@ -80,13 +87,17 @@ class Polygon:
         p = p0 + t * v
         normal = np.array([A, B, C])
         # check if point in polygon or not
-        return p, np.linalg.norm(t*v), normal if self.point_inside(p) else None
+        return (p, np.linalg.norm(t*v), normal, self.color) if self.point_inside(p) else None
 
     def __str__(self):
         return ",".join([str(p) for p in self.points])
 
 
 class Figure:
+    """
+    figure assembled from polygons
+    have center
+    """
     def __init__(self, polygons, color, center=np.array([0, 0, 0])):
         self.polygons = polygons
         self.color = color
@@ -119,15 +130,17 @@ class Figure:
         )
 
     def get_intersection(self, ray):
-        # return closest point, distance to it and normal vector
-        # find intersection with each polygon, if it exists
+        """
+        return closest point, distance to it, normal vector and color
+        find intersection with each polygon, if it exists, None instead
+        """
         min_distance = 1e+20
         closest_intersection = None
         for polygon in self.polygons:
             intersection = polygon.polygon_intersection(ray)
             if intersection is None:
                 continue
-            _, dist, _ = intersection
+            _, dist, _, _ = intersection
             if dist < min_distance:
                 closest_intersection = intersection
 
@@ -169,7 +182,7 @@ class Sphere:
         distance = np.linalg.norm(t * dir)
         normal = inters_point - self.center
 
-        return inters_point, distance, normal
+        return inters_point, distance, normal, self.color
 
     def __str__(self):
         return str(self.center) + " " + str(self.radius)

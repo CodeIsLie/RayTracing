@@ -2,25 +2,26 @@ from tkinter import *
 from tkinter import filedialog
 
 from PIL import Image, ImageTk, ImageDraw
-
+from space_model import *
 
 class WorkArea:
 
-    DEFAULT_WIDTH = 600
-    DEFAULT_HEIGHT = 600
+    DEFAULT_WIDTH = 100
+    DEFAULT_HEIGHT = 100
 
     def __init__(self):
         self.root = Tk()
         self.root.title("Ray Tracing")
         self.root.resizable(False, False)
 
-        self.model = None
+        self.model = SpaceModel.get_scene()
 
         self.canvas = Canvas(self.root, bg='white', width=self.DEFAULT_WIDTH, height=self.DEFAULT_WIDTH)
         self.canvas.grid(row=1, columnspan=10)
         self.image = Image.new('RGB', (self.DEFAULT_WIDTH, self.DEFAULT_HEIGHT), 'white')
         self.draw = ImageDraw.Draw(self.image)
 
+        self.redraw()
         self.root.mainloop()
 
 
@@ -32,7 +33,7 @@ class WorkArea:
     def redraw(self):
         # use model
         self.erase()
-        self.model.ray_tracing()
+        self.model.ray_tracing(WorkArea.DEFAULT_WIDTH, WorkArea.DEFAULT_HEIGHT)
 
         # Ray tracing call
         pixels = self.model.pixels
