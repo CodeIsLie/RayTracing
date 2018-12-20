@@ -33,7 +33,7 @@ class SpaceModel:
                 y = LEFT_BOUND + (RIGHT_BOUND-LEFT_BOUND) * (i+0.5)/width
                 z = TOP_BOUND - (TOP_BOUND - BOT_BOUND) * (j+0.5)/height
 
-                point = np.array([10, y, z])
+                point = np.array([9.99, y, z])
                 ray = point - self.camera
                 ray = Ray(point, ray / np.linalg.norm(ray))
 
@@ -68,8 +68,12 @@ class SpaceModel:
         # if start_ray.power < INTENSITY_THRESHOLD:
         #     return AMBIENT_COLOR
         color_k = max(start_ray.power, AMBIENT_K)
-        # print(intersection)
-        return tuple(np.around([comp * color_k for comp in intersection[-1].color]).astype(int))
+        # if max()
+        # TODO: make plus instead of replace
+        if AMBIENT_K > start_ray.power:
+            return tuple(np.around([comp * color_k for comp in intersection[-1].color]).astype(int))
+        else:
+            return tuple(np.array(start_ray.color).astype(int))
 
     def run_ray(self, ray):
         if ray.power < INTENSITY_THRESHOLD:
@@ -104,8 +108,9 @@ class SpaceModel:
         normal = intersection[2]
         start_dir = start_ray.direction
         direction = start_dir - 2*normal*np.dot(normal, start_dir)
-        new_ray = Ray(intersection[0], direction, start_ray.power)
-        return new_ray
+        new_ray = Ray(intersection[0], direction, start_ray.power * intersection[-1].reflection)
+        start_ray.add_child(new_ray)
+        # return new_ray
 
     def transparency_ray(self, start_ray, intersection):
         # calc new direction
@@ -131,7 +136,10 @@ class SpaceModel:
         direction = goal - start
         if np.dot(direction, normal) < 0:
             return None
-        ray = Ray(start, direction, start_ray.power * light.intensity, np.linalg.norm(direction))
+        forward_ray_k = 1 - intersection[-1].transparency - intersection[-1].reflection
+        power = start_ray.power * forward_ray_k * light.intensity
+        color = tuple([c * power for c in intersection[-1].color])
+        ray = Ray(start, direction, power, np.linalg.norm(direction), color)
         start_ray.add_child(ray)
         return ray
 

@@ -14,12 +14,13 @@ def get_room():
     # do scaling
     room.scale(k_size, k_size, k_size)
     room.move(k_size/2, k_size/2, k_size/2)
-    del room.polygons[-1]
+    # del room.polygons[-1]
     room.polygons[0].color = (180, 180, 180)
     room.polygons[1].color = (240, 20, 20)
     room.polygons[2].color = (120, 180, 180)
     room.polygons[3].color = (100, 10, 240)
     room.polygons[4].color = (0, 10, 240)
+    room.polygons[5].color = (10, 250, 10)
 
     for i in range(len(room.polygons)):
         room.polygons[i].normal *= -1
@@ -58,8 +59,8 @@ def get_camera():
 # print(room)
 
 
-sphere_1 = Sphere(np.array([5,2,2]), 2, (200, 100, 150))
-sphere_2 = Sphere(np.array([6, 7, 1]), 1, (30, 200, 100))
+sphere_1 = Sphere(np.array([6, 2.9, 2]), 2, (200, 100, 150), 0, 0.7)
+sphere_2 = Sphere(np.array([8.5, 7, 2]), 1, (250, 250, 0))
 
 cube_1 = get_cube()
 k_cube_1 = 3
@@ -68,7 +69,7 @@ cube_1.move(2+k_cube_1/2, k_cube_1/2 + 6, k_cube_1/2)
 cube_1.set_color((80, 40, 200))
 # cube_1.polygons[5].transparency = -1
 
-scene_figures = [get_room(), sphere_1, cube_1]
+scene_figures = [get_room(), sphere_1, sphere_2, cube_1]
 
 light1 = LightSource(np.array([5, 2, 9.95]), 0.5)
 light2 = LightSource(np.array([6, 7, 9.95]), 0.5)
