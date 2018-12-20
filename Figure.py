@@ -43,38 +43,31 @@ class LineEq:
 
 
 class Polygon:
-    def __init__(self, points=None, figure_center=np.array([0,0,0]), color=(255,0,0)):
+    def __init__(self, points=None, figure_center=np.array([0,0,0]), color=(255,0,0), transparency=0, reflection=0):
         self.points = [] if points is None else points
         self.figure_center = figure_center
         self.color = color
+        self.transparency = transparency
+        self.reflection = reflection
+        self.calc_norm()
+        self.normal = None
         # self.additional_info_calc()
 
-    def additional_info_calc(self):
-        # mid of all points in XoY projection
-        p_sum = np.sum(self.points, axis=0)
-        self.mid_point = p_sum/len(self.points)
-        self.mid_point_xy = self.mid_point[:2]
-        self.mid_point_yz = self.mid_point[1:]
-        self.mid_point_xz = self.mid_point.take([0, 2])
-
+    def calc_norm(self):
         self.eq = PlaneEq(self.points[0], self.points[1], self.points[2], self.figure_center)
-        shifted_points = [self.points[i-1] for i in range(len(self.points))]
-        self.line_eqs = [LineEq(p1, p2) for p1, p2 in zip(self.points, shifted_points)]
+        normal = np.array([self.eq.A, self.eq.B, self.eq.C])
+        dir_to_center = self.figure_center - self.points[0]
+        sign = np.sign(np.dot(normal, dir_to_center))
+        normal *= -sign
+        self.normal = normal
 
     def transform(self, matrix):
         tensors = [np.array([x, y, z, 1]) for x, y, z in self.points]
         self.points = [np.dot(tensor, matrix)[:3] for tensor in tensors]
-        self.additional_info_calc()
+        x, y, z = self.figure_center
+        self.figure_center = np.dot(np.array([x, y, z, 1.0]), matrix)[:3]
+        self.calc_norm()
 
-    def point_inside(self, point):
-        some_eq = self.line_eqs[0]
-        side = some_eq.side(self.mid_point)
-        for eq in self.line_eqs:
-            if eq.side(point) != side:
-                return False
-        return True
-
-    # TODO: Fix incorrect finding of intersection
     def polygon_intersection(self, ray):
         A = self.eq.A
         B = self.eq.B
@@ -88,12 +81,12 @@ class Polygon:
 
         t = - (A * p0[0] + B * p0[1] + C * p0[2] + D) / denominator
         p = p0 + t * v
-        normal = np.array([A, B, C])
+        normal = self.normal
         # check if point in polygon or not
-        return (p, np.linalg.norm(t*v), normal, self.color) # if self.point_inside(p) else None
+        return (p, np.linalg.norm(t*v), normal, self) # if self.point_inside(p) else None
 
     def __str__(self):
-        return ",".join([str(p) for p in self.points])
+        return ",".join([str(p) for p in self.points]) + " norm {}".format(self.normal)
 
 
 class Cube :
@@ -101,8 +94,8 @@ class Cube :
     figure assembled from polygons
     have center
     """
-    def __init__(self, polygons, color, center=np.array([0, 0, 0])):
-        self.polygons = polygons
+    def __init__(self, polygons, color, center=np.array([0, 0, 0]), transparency=0, reflection=0):
+        self.polygons = [Polygon(p.points, center, p.color, transparency, reflection) for p in polygons]
         self.color = color
         self.center = center
         self.calc_bounds()
@@ -180,7 +173,7 @@ class Sphere:
         self.color = color
 
     def get_intersection(self, ray):
-        # return closest point, distance to it and normal vector
+        # return closest point, distance to it and normal vector, and object
         diff = ray.start_point - self.center
         dir = ray.direction / np.linalg.norm(ray.direction)
         rad = self.radius
@@ -205,7 +198,7 @@ class Sphere:
         distance = np.linalg.norm(t * dir)
         normal = inters_point - self.center
 
-        return inters_point, distance, normal, self.color
+        return inters_point, distance, normal, self
 
     def __str__(self):
         return str(self.center) + " " + str(self.radius)

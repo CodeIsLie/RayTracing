@@ -21,6 +21,9 @@ def get_room():
     room.polygons[3].color = (100, 10, 240)
     room.polygons[4].color = (0, 10, 240)
 
+    for i in range(len(room.polygons)):
+        room.polygons[i].normal *= -1
+
     return room
 
 
@@ -55,7 +58,7 @@ def get_camera():
 # print(room)
 
 scene_figures = [get_room()]
-scene_lights = []
+scene_lights = [LightSource(np.array([5, 5, 10]), 1.0)]
 scene_camera = get_camera()
 
 print(get_room().get_intersection(Ray(np.array([10, 5, 5]), np.array([-1, 0, 0]))) )

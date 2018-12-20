@@ -11,6 +11,7 @@ HALF_DIST = (LEFT_BOUND + RIGHT_BOUND) / 2
 
 AMBIENT = 230, 230, 230
 
+AIR_TRANSPARENCY = 1
 
 class SpaceModel:
     def __init__(self, figures, lights, camera):
@@ -53,11 +54,6 @@ class SpaceModel:
         return res_intersection
 
     def ray_trace(self, start_ray):
-        #
-        # start ray from camera center to pixel (virtual coordinate)
-        # for each ray:
-        #   find closest intersection with one of the objects
-        #   calc distance to object
         #   from intersection start 3 new rays:
         #       for each light source:
         #           shadow ray with some power
@@ -66,21 +62,35 @@ class SpaceModel:
         #   Color of pixel = color(diffuse + specular)
         #
 
-        # TODO: make something except one shadow ray
+
+        # find closest intersection with one of the objects
         intersection = self.find_intersection(start_ray)
         if intersection is None:
             return AMBIENT
         else:
+            obj = intersection[-1]
+            shadow_rays = []
+            for light in self.lights:
+                shadow_rays.append(self.shadow_ray(start_ray, intersection, light))
+
+            if obj.reflection > 0:
+                self.reflection_ray(start_ray, intersection)
+            if obj.transparency > 0:
+                self.transparency_ray(start_ray, intersection)
             # print(intersection)
-            return intersection[-1]
+            return intersection[-1].color
 
 
     # maybe not face but normal vector
-    def reflection_ray(self, start_ray, normal):
+    def reflection_ray(self, start_ray, intersection):
         # calc new direction, calc power
-        new_ray = Ray()
+        normal = intersection[2]
+        start_dir = start_ray.direction
+        direction = start_dir - 2*normal*np.dot(normal, start_dir)
+        new_ray = Ray(intersection[0], direction)
+        return new_ray
 
-    def transparency_ray(self, start_ray, normal):
+    def transparency_ray(self, start_ray, intersection):
         # calc new direction
         # cos (new angle) = sqrt(1 - (n1*n1/(n2*n2)*(1 - dot(N, I) * dot(N,I)) )
         # T = n1/n2*I - (cos (new angle) + n1/n2*dot(N, I)) * N
@@ -90,9 +100,18 @@ class SpaceModel:
         #
         ray = Ray()
 
-    def shadow_ray(self, start_ray, face, light_source):
-        # just to light source, if face direction is appropriate
-        pass
+    def shadow_ray(self, start_ray, intersection, light):
+        """
+        create a ray from intersection point to light source, if it possible
+
+        """
+        goal = light.source
+        normal = intersection[2]
+        direction = goal - intersection[0]
+        if np.dot(direction, normal) < 0:
+            return None
+        # start_ray.add_child()
+        return Ray(intersection[0], direction)
 
     @staticmethod
     def get_scene():
