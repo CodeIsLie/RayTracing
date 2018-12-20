@@ -38,7 +38,7 @@ class SpaceModel:
                 ray = Ray(point, ray / np.linalg.norm(ray))
 
                 # print("for {0:.3f} and {1:.3f} intersection: ".format(y, z))
-                if i == 64 and j == 64:
+                if i == 62 and j == 30:
                     k = 2
                     pass
                 color = self.ray_trace(ray)

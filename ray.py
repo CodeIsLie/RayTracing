@@ -15,8 +15,8 @@ class Ray:
         self.children += children_rays
 
     def calc_power(self):
-        r = sum([c.color[0] for c in self.children if c.power > 0])
-        g = sum([c.color[1] for c in self.children if c.power > 0])
-        b = sum([c.color[2] for c in self.children if c.power > 0])
+        r = sum([c.color[0] for c in self.children if c.power > 0 and c.color is not None])
+        g = sum([c.color[1] for c in self.children if c.power > 0 and c.color is not None])
+        b = sum([c.color[2] for c in self.children if c.power > 0 and c.color is not None])
         self.color = r, g, b
         self.power = sum([c.power for c in self.children])

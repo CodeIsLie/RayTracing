@@ -7,8 +7,8 @@ from space_model import *
 
 class WorkArea:
 
-    DEFAULT_WIDTH = 700
-    DEFAULT_HEIGHT = 700
+    DEFAULT_WIDTH = 100
+    DEFAULT_HEIGHT = 100
 
     def __init__(self):
         self.root = Tk()

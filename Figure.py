@@ -99,12 +99,24 @@ class Cube:
         self.polygons = [Polygon(p.points, center, p.color, transparency, reflection) for p in polygons]
         self.color = color
         self.center = center
+        self.reflection = reflection
+        self.transparency = transparency
         self.calc_bounds()
 
     def set_color(self, color):
         self.color = color
         for p in self.polygons:
             p.color = color
+
+    def set_reflection(self, reflection):
+        self.reflection = reflection
+        for p in self.polygons:
+            p.reflection = reflection
+
+    def set_transparency(self, transparency):
+        self.transparency = transparency
+        for p in self.polygons:
+            p.transparency = transparency
 
     def calc_bounds(self):
         xs = [x for polygon in self.polygons for x, _, _ in polygon.points]
