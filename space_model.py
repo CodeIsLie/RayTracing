@@ -9,7 +9,10 @@ BOT_BOUND = 0
 TOP_BOUND = 10
 HALF_DIST = (LEFT_BOUND + RIGHT_BOUND) / 2
 
-AMBIENT = 230, 230, 230
+AMBIENT_COLOR = 10, 10, 10
+AMBIENT_K = 0.15
+
+INTENSITY_THRESHOLD = 0.001
 
 AIR_TRANSPARENCY = 1
 
@@ -34,6 +37,9 @@ class SpaceModel:
                 ray = Ray(point, ray / np.linalg.norm(ray))
 
                 # print("for {0:.3f} and {1:.3f} intersection: ".format(y, z))
+                if i == 1:
+                    k = 2
+                    pass
                 color = self.ray_trace(ray)
                 color_vec.append(color)
             color_mat.append(color_vec)
@@ -54,32 +60,42 @@ class SpaceModel:
         return res_intersection
 
     def ray_trace(self, start_ray):
-        #   from intersection start 3 new rays:
-        #       for each light source:
-        #           shadow ray with some power
-        #       reflection ray with some power, if object have reflection property
-        #       transparence ray with some power, if object have transparency property
-        #   Color of pixel = color(diffuse + specular)
-        #
-
-
         # find closest intersection with one of the objects
         intersection = self.find_intersection(start_ray)
+        self.run_ray(start_ray)
+
+        # if start_ray.power < INTENSITY_THRESHOLD:
+        #     return AMBIENT_COLOR
+        color_k = max(start_ray.power, AMBIENT_K)
+        # print(intersection)
+        return tuple(np.around([comp * color_k for comp in intersection[-1].color]).astype(int))
+
+    def run_ray(self, ray):
+        if ray.power < INTENSITY_THRESHOLD:
+            return
+
+        intersection = self.find_intersection(ray)
         if intersection is None:
-            return AMBIENT
+            if ray.distance_to_light is None:
+                ray.power = 0.0
         else:
+            # case of shadow ray
+            if ray.distance_to_light is not None:
+                if ray.distance_to_light >= intersection[1]:
+                    ray.power = 0.0
+                return
             obj = intersection[-1]
             shadow_rays = []
             for light in self.lights:
-                shadow_rays.append(self.shadow_ray(start_ray, intersection, light))
+                shadow_rays.append(self.shadow_ray(ray, intersection, light))
 
             if obj.reflection > 0:
-                self.reflection_ray(start_ray, intersection)
+                self.reflection_ray(ray, intersection)
             if obj.transparency > 0:
-                self.transparency_ray(start_ray, intersection)
-            # print(intersection)
-            return intersection[-1].color
-
+                self.transparency_ray(ray, intersection)
+            for r in ray.children:
+                self.run_ray(r)
+            ray.calc_power()
 
     # maybe not face but normal vector
     def reflection_ray(self, start_ray, intersection):
@@ -87,7 +103,7 @@ class SpaceModel:
         normal = intersection[2]
         start_dir = start_ray.direction
         direction = start_dir - 2*normal*np.dot(normal, start_dir)
-        new_ray = Ray(intersection[0], direction)
+        new_ray = Ray(intersection[0], direction, start_ray.power)
         return new_ray
 
     def transparency_ray(self, start_ray, intersection):
@@ -98,7 +114,10 @@ class SpaceModel:
         #       I - start ray, N - normal vector, n1, n2 - refraction coefficients
         #       T - resulting Ray
         #
-        ray = Ray()
+        # TODO: calc direction by formula above
+        direction = None
+        ray = Ray(intersection[0], direction, start_ray.power)
+        return ray
 
     def shadow_ray(self, start_ray, intersection, light):
         """
@@ -107,11 +126,13 @@ class SpaceModel:
         """
         goal = light.source
         normal = intersection[2]
-        direction = goal - intersection[0]
+        start = intersection[0] # + normal * 0.0001
+        direction = goal - start
         if np.dot(direction, normal) < 0:
             return None
-        # start_ray.add_child()
-        return Ray(intersection[0], direction)
+        ray = Ray(start, direction, start_ray.power * light.intensity, np.linalg.norm(direction))
+        start_ray.add_child(ray)
+        return ray
 
     @staticmethod
     def get_scene():

@@ -57,8 +57,14 @@ def get_camera():
 # room = get_room()
 # print(room)
 
-scene_figures = [get_room()]
-scene_lights = [LightSource(np.array([5, 5, 10]), 1.0)]
+
+sphere_1 = Sphere(np.array([5,2,2]), 2, (200, 100, 150))
+sphere_2 = Sphere(np.array([6, 7, 2]), 2, (30, 200, 100))
+scene_figures = [get_room(), sphere_1, sphere_2]
+
+light1 = LightSource(np.array([5, 2, 9.95]), 0.5)
+light2 = LightSource(np.array([5, 7, 9.95]), 0.5)
+scene_lights = [light1, light2]
 scene_camera = get_camera()
 
 print(get_room().get_intersection(Ray(np.array([10, 5, 5]), np.array([-1, 0, 0]))) )

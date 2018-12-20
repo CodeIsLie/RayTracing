@@ -80,10 +80,11 @@ class Polygon:
             return None
 
         t = - (A * p0[0] + B * p0[1] + C * p0[2] + D) / denominator
+        t -= 2*EPS
         p = p0 + t * v
         normal = self.normal
         # check if point in polygon or not
-        return (p, np.linalg.norm(t*v), normal, self) # if self.point_inside(p) else None
+        return (p, np.linalg.norm(t*v), normal, self) if t > -EPS else None
 
     def __str__(self):
         return ",".join([str(p) for p in self.points]) + " norm {}".format(self.normal)
@@ -117,7 +118,6 @@ class Cube :
         for plane in self.polygons:
             plane.transform(matrix)
         self.calc_bounds()
-
 
     def move(self, dx, dy, dz):
         self.transform(
@@ -167,10 +167,12 @@ class Cube :
 
 
 class Sphere:
-    def __init__(self, center, radius, color):
+    def __init__(self, center, radius, color=(200, 10, 10), transparency=0, reflection=0):
         self.center = center
         self.radius = radius
         self.color = color
+        self.transparency = transparency
+        self.reflection = reflection
 
     def get_intersection(self, ray):
         # return closest point, distance to it and normal vector, and object
@@ -178,6 +180,8 @@ class Sphere:
         dir = ray.direction / np.linalg.norm(ray.direction)
         rad = self.radius
         discriminant = np.dot(diff, dir) ** 2 - (np.linalg.norm(diff)**2 - rad*rad)
+        if discriminant < 0:
+            return None
         if abs(discriminant) < EPS:
             t = -np.dot(dir, diff)
         else:
@@ -193,7 +197,8 @@ class Sphere:
             else:
                 t = t1
 
-        print(t)
+        # print(t)
+        t -= 2*EPS
         inters_point = ray.start_point + t * dir
         distance = np.linalg.norm(t * dir)
         normal = inters_point - self.center

@@ -4,10 +4,11 @@ from tkinter import filedialog
 from PIL import Image, ImageTk, ImageDraw
 from space_model import *
 
+
 class WorkArea:
 
-    DEFAULT_WIDTH = 100
-    DEFAULT_HEIGHT = 100
+    DEFAULT_WIDTH = 500
+    DEFAULT_HEIGHT = 500
 
     def __init__(self):
         self.root = Tk()
@@ -43,7 +44,6 @@ class WorkArea:
 
         self.canvas.image = ImageTk.PhotoImage(self.image)
         self.canvas.create_image(0, 0, image=self.canvas.image, anchor='nw')
-
 
 
 gui = WorkArea()
