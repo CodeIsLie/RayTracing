@@ -47,13 +47,16 @@ class Polygon:
         self.points = [] if points is None else points
         self.figure_center = figure_center
         self.color = color
-        self.additional_info_calc()
+        # self.additional_info_calc()
 
     def additional_info_calc(self):
         # mid of all points in XoY projection
         p_sum = np.sum(self.points, axis=0)
         self.mid_point = p_sum/len(self.points)
-        self.mid_point = self.mid_point[:2]
+        self.mid_point_xy = self.mid_point[:2]
+        self.mid_point_yz = self.mid_point[1:]
+        self.mid_point_xz = self.mid_point.take([0, 2])
+
         self.eq = PlaneEq(self.points[0], self.points[1], self.points[2], self.figure_center)
         shifted_points = [self.points[i-1] for i in range(len(self.points))]
         self.line_eqs = [LineEq(p1, p2) for p1, p2 in zip(self.points, shifted_points)]
@@ -87,13 +90,13 @@ class Polygon:
         p = p0 + t * v
         normal = np.array([A, B, C])
         # check if point in polygon or not
-        return (p, np.linalg.norm(t*v), normal, self.color) if self.point_inside(p) else None
+        return (p, np.linalg.norm(t*v), normal, self.color) # if self.point_inside(p) else None
 
     def __str__(self):
         return ",".join([str(p) for p in self.points])
 
 
-class Figure:
+class Cube :
     """
     figure assembled from polygons
     have center
@@ -102,12 +105,26 @@ class Figure:
         self.polygons = polygons
         self.color = color
         self.center = center
+        self.calc_bounds()
+
+    def calc_bounds(self):
+        xs = [x for polygon in self.polygons for x, _, _ in polygon.points]
+        ys = [y for polygon in self.polygons for _, y, _ in polygon.points]
+        zs = [z for polygon in self.polygons for _, _, z in polygon.points]
+        self.x_left = min(xs)
+        self.x_right = max(xs)
+        self.y_left = min(ys)
+        self.y_right = max(ys)
+        self.z_left = min(zs)
+        self.z_right = max(zs)
 
     def transform(self, matrix):
         x, y, z = self.center[:3]
         self.center = np.dot(np.array([x, y, z, 1]), matrix)
         for plane in self.polygons:
             plane.transform(matrix)
+        self.calc_bounds()
+
 
     def move(self, dx, dy, dz):
         self.transform(
@@ -129,6 +146,12 @@ class Figure:
             ])
         )
 
+    def point_inside(self, point):
+        x, y, z = point
+        return self.x_left-EPS < x < self.x_right + EPS\
+            and self.y_left-EPS < y < self.y_right + EPS\
+            and self.z_left - EPS < z < self.z_right + EPS
+
     def get_intersection(self, ray):
         """
         return closest point, distance to it, normal vector and color
@@ -140,8 +163,8 @@ class Figure:
             intersection = polygon.polygon_intersection(ray)
             if intersection is None:
                 continue
-            _, dist, _, _ = intersection
-            if dist < min_distance:
+            point, dist, _, _ = intersection
+            if dist < min_distance and self.point_inside(point):
                 closest_intersection = intersection
 
         return closest_intersection

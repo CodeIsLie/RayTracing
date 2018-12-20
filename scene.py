@@ -15,11 +15,11 @@ def get_room():
     room.scale(k_size, k_size, k_size)
     room.move(k_size/2, k_size/2, k_size/2)
     del room.polygons[-1]
-    room.polygons[0].color = (0, 255, 0)
-    room.polygons[1].color = (0, 255, 255)
-    room.polygons[2].color = (255, 0, 0)
-    room.polygons[3].color = (0, 0, 255)
-    room.polygons[4].color = (255, 0, 255)
+    room.polygons[0].color = (180, 180, 180)
+    room.polygons[1].color = (240, 20, 20)
+    room.polygons[2].color = (120, 180, 180)
+    room.polygons[3].color = (100, 10, 240)
+    room.polygons[4].color = (0, 10, 240)
 
     return room
 
@@ -44,7 +44,7 @@ def get_cube():
     ])
     polygons = [Polygon(points) for points in edge_points]
     # p = 2
-    return Figure(polygons, [0, 0, 0])
+    return Cube(polygons, [0, 0, 0])
 
 # ASSUMING that field of view is 90 degrees on X and Y
 def get_camera():

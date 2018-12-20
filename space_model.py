@@ -32,7 +32,7 @@ class SpaceModel:
                 ray = point - self.camera
                 ray = Ray(point, ray / np.linalg.norm(ray))
 
-                print("for {} and {} intersection: ".format(y, z))
+                # print("for {0:.3f} and {1:.3f} intersection: ".format(y, z))
                 color = self.ray_trace(ray)
                 color_vec.append(color)
             color_mat.append(color_vec)
@@ -71,8 +71,7 @@ class SpaceModel:
         if intersection is None:
             return AMBIENT
         else:
-            print(intersection)
-
+            # print(intersection)
             return intersection[-1]
 
 
