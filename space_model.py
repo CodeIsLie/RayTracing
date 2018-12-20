@@ -16,6 +16,7 @@ INTENSITY_THRESHOLD = 0.001
 
 AIR_TRANSPARENCY = 1
 
+
 class SpaceModel:
     def __init__(self, figures, lights, camera):
         self.figures = figures
@@ -37,7 +38,7 @@ class SpaceModel:
                 ray = Ray(point, ray / np.linalg.norm(ray))
 
                 # print("for {0:.3f} and {1:.3f} intersection: ".format(y, z))
-                if i == 1:
+                if i == 64 and j == 64:
                     k = 2
                     pass
                 color = self.ray_trace(ray)

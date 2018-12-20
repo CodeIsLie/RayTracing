@@ -59,11 +59,19 @@ def get_camera():
 
 
 sphere_1 = Sphere(np.array([5,2,2]), 2, (200, 100, 150))
-sphere_2 = Sphere(np.array([6, 7, 2]), 2, (30, 200, 100))
-scene_figures = [get_room(), sphere_1, sphere_2]
+sphere_2 = Sphere(np.array([6, 7, 1]), 1, (30, 200, 100))
+
+cube_1 = get_cube()
+k_cube_1 = 3
+cube_1.scale(k_cube_1, k_cube_1, k_cube_1)
+cube_1.move(2+k_cube_1/2, k_cube_1/2 + 6, k_cube_1/2)
+cube_1.set_color((80, 40, 200))
+# cube_1.polygons[5].transparency = -1
+
+scene_figures = [get_room(), sphere_1, cube_1]
 
 light1 = LightSource(np.array([5, 2, 9.95]), 0.5)
-light2 = LightSource(np.array([5, 7, 9.95]), 0.5)
+light2 = LightSource(np.array([6, 7, 9.95]), 0.5)
 scene_lights = [light1, light2]
 scene_camera = get_camera()
 

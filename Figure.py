@@ -49,8 +49,8 @@ class Polygon:
         self.color = color
         self.transparency = transparency
         self.reflection = reflection
-        self.calc_norm()
         self.normal = None
+        self.calc_norm()
         # self.additional_info_calc()
 
     def calc_norm(self):
@@ -58,7 +58,7 @@ class Polygon:
         normal = np.array([self.eq.A, self.eq.B, self.eq.C])
         dir_to_center = self.figure_center - self.points[0]
         sign = np.sign(np.dot(normal, dir_to_center))
-        normal *= -sign
+        normal *= -sign/np.linalg.norm(normal)
         self.normal = normal
 
     def transform(self, matrix):
@@ -80,7 +80,7 @@ class Polygon:
             return None
 
         t = - (A * p0[0] + B * p0[1] + C * p0[2] + D) / denominator
-        t -= 2*EPS
+        t -= EPS
         p = p0 + t * v
         normal = self.normal
         # check if point in polygon or not
@@ -90,7 +90,7 @@ class Polygon:
         return ",".join([str(p) for p in self.points]) + " norm {}".format(self.normal)
 
 
-class Cube :
+class Cube:
     """
     figure assembled from polygons
     have center
@@ -100,6 +100,11 @@ class Cube :
         self.color = color
         self.center = center
         self.calc_bounds()
+
+    def set_color(self, color):
+        self.color = color
+        for p in self.polygons:
+            p.color = color
 
     def calc_bounds(self):
         xs = [x for polygon in self.polygons for x, _, _ in polygon.points]
@@ -141,9 +146,9 @@ class Cube :
 
     def point_inside(self, point):
         x, y, z = point
-        return self.x_left-EPS < x < self.x_right + EPS\
-            and self.y_left-EPS < y < self.y_right + EPS\
-            and self.z_left - EPS < z < self.z_right + EPS
+        return self.x_left-2*EPS < x < self.x_right + 2*EPS\
+            and self.y_left-2*EPS < y < self.y_right + 2*EPS\
+            and self.z_left - 2*EPS < z < self.z_right + 2*EPS
 
     def get_intersection(self, ray):
         """
@@ -156,9 +161,14 @@ class Cube :
             intersection = polygon.polygon_intersection(ray)
             if intersection is None:
                 continue
-            point, dist, _, _ = intersection
+
+            point, dist, _, o = intersection
             if dist < min_distance and self.point_inside(point):
+                if self.color == (20, 10, 240) and o.transparency == -1:
+                    p = 3
+                min_distance = dist
                 closest_intersection = intersection
+
 
         return closest_intersection
 

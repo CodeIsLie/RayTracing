@@ -7,8 +7,8 @@ from space_model import *
 
 class WorkArea:
 
-    DEFAULT_WIDTH = 500
-    DEFAULT_HEIGHT = 500
+    DEFAULT_WIDTH = 100
+    DEFAULT_HEIGHT = 100
 
     def __init__(self):
         self.root = Tk()
@@ -24,7 +24,6 @@ class WorkArea:
 
         self.redraw()
         self.root.mainloop()
-
 
     def erase(self):
         self.canvas.delete("all")
