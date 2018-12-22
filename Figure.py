@@ -43,12 +43,14 @@ class LineEq:
 
 
 class Polygon:
-    def __init__(self, points=None, figure_center=np.array([0,0,0]), color=(255,0,0), transparency=0, reflection=0):
+    def __init__(self, points=None, figure_center=np.array([0,0,0]), color=(255,0,0),
+                 transparency=0, reflection=0, refraction=1):
         self.points = [] if points is None else points
         self.figure_center = figure_center
         self.color = color
         self.transparency = transparency
         self.reflection = reflection
+        self.refraction=refraction
         self.normal = None
         self.calc_norm()
         # self.additional_info_calc()
@@ -95,18 +97,24 @@ class Cube:
     figure assembled from polygons
     have center
     """
-    def __init__(self, polygons, color, center=np.array([0, 0, 0]), transparency=0, reflection=0):
+    def __init__(self, polygons, color, center=np.array([0, 0, 0]), transparency=0, reflection=0, refraction=1):
         self.polygons = [Polygon(p.points, center, p.color, transparency, reflection) for p in polygons]
         self.color = color
         self.center = center
         self.reflection = reflection
         self.transparency = transparency
+        self.refraction=refraction
         self.calc_bounds()
 
     def set_color(self, color):
         self.color = color
         for p in self.polygons:
             p.color = color
+
+    def set_refraction(self, refraction):
+        self.refraction = refraction
+        for p in self.polygons:
+            p.refraction = refraction
 
     def set_reflection(self, reflection):
         self.reflection = reflection
@@ -181,7 +189,6 @@ class Cube:
                 min_distance = dist
                 closest_intersection = intersection
 
-
         return closest_intersection
 
     def __str__(self):
@@ -189,12 +196,13 @@ class Cube:
 
 
 class Sphere:
-    def __init__(self, center, radius, color=(200, 10, 10), transparency=0, reflection=0):
+    def __init__(self, center, radius, color=(200, 10, 10), transparency=0, reflection=0, refraction=1):
         self.center = center
         self.radius = radius
         self.color = color
         self.transparency = transparency
         self.reflection = reflection
+        self.refraction = refraction
 
     def get_intersection(self, ray):
         # return closest point, distance to it and normal vector, and object
