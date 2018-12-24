@@ -45,15 +45,27 @@ class LineEq:
 class Polygon:
     def __init__(self, points=None, figure_center=np.array([0,0,0]), color=(255,0,0),
                  transparency=0, reflection=0, refraction=1):
+        """
+
+        :param points: точки полигона
+        :param figure_center: центер фигуры (по факту только куба), которйо принадлежит этот полигон
+        :param color:
+        :param transparency: прозрачность объекта,
+            какую часть в итоговом цвете будет составлять преломлённый луч,от 0 до 1
+        :param reflection: зеркальность объекта, аналогично прозрачности от 0 до 1
+        :param refraction: коэфиициент преломления, 1 - угол при преломлении не меняется,
+            чем ближе к 0, тем больше меняется угол
+        """
         self.points = [] if points is None else points
         self.figure_center = figure_center
         self.color = color
         self.transparency = transparency
         self.reflection = reflection
         self.refraction=refraction
+        # нормаль
         self.normal = None
+        self.eq = None
         self.calc_norm()
-        # self.additional_info_calc()
 
     def calc_norm(self):
         self.eq = PlaneEq(self.points[0], self.points[1], self.points[2], self.figure_center)
@@ -174,6 +186,9 @@ class Cube:
         """
         return closest point, distance to it, normal vector and color
         find intersection with each polygon, if it exists, None instead
+
+        intersection = tuple(point(np.array), distance from ray start to intersection(double),
+                norm vector(np.array), object of intersection - sphere or polygon)
         """
         min_distance = 1e+20
         closest_intersection = None
@@ -184,8 +199,6 @@ class Cube:
 
             point, dist, _, o = intersection
             if dist < min_distance and self.point_inside(point):
-                if self.color == (20, 10, 240) and o.transparency == -1:
-                    p = 3
                 min_distance = dist
                 closest_intersection = intersection
 
@@ -197,6 +210,16 @@ class Cube:
 
 class Sphere:
     def __init__(self, center, radius, color=(200, 10, 10), transparency=0, reflection=0, refraction=1):
+        """
+        :param center:
+        :param radius:
+        :param color:
+        :param transparency: прозрачность объекта,
+            какую часть в итоговом цвете будет составлять преломлённый луч,от 0 до 1
+        :param reflection: зеркальность объекта, аналогично прозрачности от 0 до 1
+        :param refraction: коэфиициент преломления, 1 - угол при преломлении не меняется,
+            чем ближе к 0, тем больше меняется угол
+        """
         self.center = center
         self.radius = radius
         self.color = color
@@ -204,7 +227,13 @@ class Sphere:
         self.reflection = reflection
         self.refraction = refraction
 
+
     def get_intersection(self, ray):
+        """
+        :param ray:
+        :return: intersection = tuple(point(np.array), distance from ray start to intersection(double),
+                norm vector(np.array), object of intersection - sphere or polygon)
+        """
         # return closest point, distance to it and normal vector, and object
         diff = ray.start_point - self.center
         dir = ray.direction / np.linalg.norm(ray.direction)
@@ -212,6 +241,7 @@ class Sphere:
         discriminant = np.dot(diff, dir) ** 2 - (np.linalg.norm(diff)**2 - rad*rad)
         if discriminant < 0:
             return None
+        # нет пересечений со сферой
         if abs(discriminant) < EPS:
             t = -np.dot(dir, diff)
         else:
@@ -219,6 +249,7 @@ class Sphere:
             a = -np.dot(diff, dir)
             t0 = a + np.sqrt(discriminant)
             t1 = a - np.sqrt(discriminant)
+
             if t1 < 0:
                 if t0 > 0:
                     t = t0

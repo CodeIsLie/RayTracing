@@ -7,13 +7,21 @@ class TranceRayType:
 
 
 class Ray:
-    def __init__(self, start, direction, power=1.0, distance_to_light=None, color=None, rayType=TranceRayType.OUT, light=None):
+    def __init__(self, start, direction, power=1.0, distance_to_light=None, color=None, rayType=TranceRayType.OUT):
+        """
+
+        :param start: точка начала луча, np.array
+        :param direction: вектор луча, np.array
+        :param power: сила луча, уменьшается при отражении и преломлении
+        :param distance_to_light: если это теневой луч, то указывается расстояние до света
+        :param color: суммарный цвет, который пришёл с этого луча (вычисляется на возврате рекурсии)
+        :param rayType: определяет, внутренний это луч(преломлённый внутри объекта) или снаружи объектов обычный луч
+        """
         self.start_point = start
         self.direction = direction
         self.power = power
         self.color = color
         self.distance_to_light = distance_to_light
-        self.light = light
         self.children = []
         self.rayType = rayType
 

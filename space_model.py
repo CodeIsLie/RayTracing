@@ -4,14 +4,13 @@ import numpy as np
 
 LEFT_BOUND = 0
 RIGHT_BOUND = 10
-
 BOT_BOUND = 0
 TOP_BOUND = 10
+
 HALF_DIST = (LEFT_BOUND + RIGHT_BOUND) / 2
 
 AMBIENT_COLOR = 10, 10, 10
 AMBIENT_K = 0.16
-
 INTENSITY_THRESHOLD = 0.001
 
 AIR_TRANSPARENCY = 1
@@ -75,6 +74,7 @@ class SpaceModel:
         diffuse_lightning = np.array(start_ray.color)
 
         combine_lightning = np.array([min(255, color) for color in (ambient_lightning + diffuse_lightning)])
+        # делаем преобразование из float в int, так как цвет должен быть целым
         return tuple(combine_lightning.astype(int))
 
     def run_ray(self, ray):
@@ -83,6 +83,7 @@ class SpaceModel:
 
         intersection = self.find_intersection(ray)
         if intersection is None:
+            # если это не теневой луч, то он не будет учитывается
             if ray.distance_to_light is None:
                 ray.power = 0.0
         else:

@@ -20,8 +20,9 @@ def get_room():
     room.polygons[2].color = (120, 180, 180)
     room.polygons[3].color = (100, 10, 240)
     room.polygons[4].color = (0, 10, 240)
-    room.polygons[5].color = (10, 250, 10)
+    room.polygons[5].color = (10, 200, 10)
 
+    # чтобы всё работало и
     for i in range(len(room.polygons)):
         room.polygons[i].normal *= -1
 
@@ -47,16 +48,12 @@ def get_cube():
         [p8, p6, p2, p5]
     ])
     polygons = [Polygon(points) for points in edge_points]
-    # p = 2
     return Cube(polygons, [0, 0, 0])
 
-# ASSUMING that field of view is 90 degrees on X and Y
+# ASSUMING that field of view is 90 degrees on X and Y, to change field of view, change first value
+# increasing value - angle of view decreasing and vice versa
 def get_camera():
     return np.array([15, 5, 5])
-
-# cube = get_cube()
-# room = get_room()
-# print(room)
 
 
 sphere_1 = Sphere(np.array([4.6, 2.9, 2]), 2, (215, 20, 60), 0, 0.5)
