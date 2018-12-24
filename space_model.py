@@ -178,7 +178,7 @@ class SpaceModel:
         forward_ray_k = 1 - intersection[-1].transparency - intersection[-1].reflection
         power = start_ray.power * forward_ray_k * light.intensity
         color = tuple([c * power for c in intersection[-1].color])
-        ray = Ray(start, direction, power, np.linalg.norm(direction), color, light=light)
+        ray = Ray(start, direction, power, np.linalg.norm(direction), color)
         start_ray.add_child(ray)
 
     @staticmethod
