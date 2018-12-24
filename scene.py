@@ -88,8 +88,8 @@ cube_3.set_reflection(0.5)
 
 scene_figures = [get_room(), sphere_1, sphere_2, sphere_3, cube_1, cube_2, cube_3]
 
-light1 = LightSource(np.array([4.5, 2, 9.95]), 0.5)
-light2 = LightSource(np.array([6.5, 7, 9.95]), 0.5)
+light1 = LightSource(np.array([4.5, 2, 9.95]), 0.42)
+light2 = LightSource(np.array([6.5, 7, 9.95]), 0.42)
 scene_lights = [light1, light2]
 scene_camera = get_camera()
 

@@ -10,7 +10,7 @@ TOP_BOUND = 10
 HALF_DIST = (LEFT_BOUND + RIGHT_BOUND) / 2
 
 AMBIENT_COLOR = 10, 10, 10
-AMBIENT_K = 0.2
+AMBIENT_K = 0.16
 
 INTENSITY_THRESHOLD = 0.001
 
@@ -37,10 +37,6 @@ class SpaceModel:
                 ray = point - self.camera
                 ray = Ray(point, ray / np.linalg.norm(ray))
 
-
-                if i == 27 and j == 78:
-                    k = 2
-                    pass
                 color = self.ray_trace(ray)
                 color_vec.append(color)
             color_mat.append(color_vec)
@@ -65,11 +61,6 @@ class SpaceModel:
         intersection = self.find_intersection(start_ray)
         self.run_ray(start_ray)
 
-        # if start_ray.power < INTENSITY_THRESHOLD:
-        #     return AMBIENT_COLOR
-        color_k = max(start_ray.power, AMBIENT_K)
-        # if max()
-
         distance_lightning = 0
         point = intersection[0]
 
@@ -77,10 +68,14 @@ class SpaceModel:
             distance = np.linalg.norm(point - l.source)
             distance_lightning += 2/(1+distance)
         light_minimum = max(AMBIENT_K, distance_lightning)
-        if light_minimum > start_ray.power:
-            return tuple(np.around([min(comp * light_minimum, 255) for comp in intersection[-1].color]).astype(int))
-        else:
-            return tuple(np.array(start_ray.color).astype(int))
+
+        # фоновое освещение
+        ambient_lightning = np.array([comp * light_minimum for comp in intersection[-1].color])
+        # прямое освещение
+        diffuse_lightning = np.array(start_ray.color)
+
+        combine_lightning = np.array([min(255, color) for color in (ambient_lightning + diffuse_lightning)])
+        return tuple(combine_lightning.astype(int))
 
     def run_ray(self, ray):
         if ray.power < INTENSITY_THRESHOLD:
@@ -96,17 +91,17 @@ class SpaceModel:
                 if ray.distance_to_light >= intersection[1]:
                     ray.power = 0.0
                 return
-            obj = intersection[-1]
-            shadow_rays = []
+
+            # sphere or polygon
+            figure = intersection[-1]
             if ray.rayType == TranceRayType.IN:
                 intersection = self.move_intersection_point(ray, intersection)
             for light in self.lights:
                 self.shadow_ray(ray, intersection, light)
-                # shadow_rays.append()
 
-            if obj.reflection > 0:
+            if figure.reflection > 0:
                 self.reflection_ray(ray, intersection)
-            if obj.transparency > 0:
+            if figure.transparency > 0:
                 if ray.rayType == TranceRayType.OUT:
                     intersection = self.move_intersection_point(ray, intersection)
                 self.transparency_ray(ray, intersection)
@@ -184,7 +179,6 @@ class SpaceModel:
         color = tuple([c * power for c in intersection[-1].color])
         ray = Ray(start, direction, power, np.linalg.norm(direction), color, light=light)
         start_ray.add_child(ray)
-        # return ray
 
     @staticmethod
     def get_scene():
